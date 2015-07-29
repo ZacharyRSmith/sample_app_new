@@ -49,5 +49,10 @@ class UsersEditTest < ActionDispatch::IntegrationTest
     @user.reload
     assert_equal name, @user.name
     assert_equal email, @user.email
+
+    # Make sure friendly forwarding doesn't persist
+    get root_url
+    log_in_as(@user)
+    assert_redirected_to @user
   end
 end
