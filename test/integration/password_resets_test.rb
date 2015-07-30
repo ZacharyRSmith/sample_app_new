@@ -78,4 +78,19 @@ class PasswordResetsTest < ActionDispatch::IntegrationTest
 #     # User is automatically logged-in after resetting password:
     assert is_logged_in?
   end
+
+  test "expired token" do
+    get new_password_reset_path
+    post password_resets_path, password_reset: { email: @user.email }
+
+    @user = assigns(:user)
+    @user.update_attribute(:password_reset_sent_at, 100.years.ago)
+    patch password_reset_path(@user.password_reset_token),
+        email: @user.email,
+        user: { password: 'new_password',
+                password_confirmation: 'new_password' }
+    assert_response :redirect
+    follow_redirect!
+    assert_match /expired/i, response.body
+  end
 end
