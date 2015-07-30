@@ -1,5 +1,5 @@
 class User < ActiveRecord::Base
-  attr_accessor :activation_token, :remember_token
+  attr_accessor :activation_token, :password_reset_token, :remember_token
   before_create :create_activation_digest
   before_save :downcase_email
   validates :name,  presence: true, length: { maximum: 50 }
@@ -34,16 +34,18 @@ class User < ActiveRecord::Base
     BCrypt::Password.new(digest).is_password?(token)
   end
 
-#   def authenticated?(remember_token)
-#     if remember_digest.nil?
-#       return false
-#     end
-
-#     BCrypt::Password.new(remember_digest).is_password?(remember_token)
-#   end
+  def create_password_reset_digest
+    self.password_reset_token = User.new_token
+    update_attribute(:password_reset_digest, User.digest(password_reset_token))
+    update_attribute(:password_reset_sent_at, Time.zone.now)
+  end
 
   def forget
     update_attribute(:remember_digest, nil)
+  end
+
+  def password_reset_expired?
+    password_reset_sent_at < 2.hours.ago
   end
 
   def remember
@@ -53,6 +55,10 @@ class User < ActiveRecord::Base
 
   def send_activation_email
     UserMailer.account_activation(self).deliver_now
+  end
+
+  def send_password_reset_email
+    UserMailer.password_reset(self).deliver_now
   end
 
   private
