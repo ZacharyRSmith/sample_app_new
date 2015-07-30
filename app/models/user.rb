@@ -22,8 +22,10 @@ class User < ActiveRecord::Base
   end
 
   def activate
-    update_attribute(:activated, true)
-    update_attribute(:activated_at, Time.zone.now)
+    update_columns(
+      activated: true,
+      activated_at: Time.zone.now
+    )
   end
 
   def authenticated?(attr, token)
@@ -36,8 +38,10 @@ class User < ActiveRecord::Base
 
   def create_password_reset_digest
     self.password_reset_token = User.new_token
-    update_attribute(:password_reset_digest, User.digest(password_reset_token))
-    update_attribute(:password_reset_sent_at, Time.zone.now)
+    update_columns(
+      password_reset_digest: User.digest(password_reset_token),
+      password_reset_sent_at: Time.zone.now
+    )
   end
 
   def forget
